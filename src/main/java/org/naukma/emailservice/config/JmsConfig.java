@@ -1,4 +1,4 @@
-package org.naukma.emailservice;
+package org.naukma.emailservice.config;
 
 import jakarta.jms.ConnectionFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
