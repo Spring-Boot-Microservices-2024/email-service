@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Weekly Digest</title>
+</head>
+    <body>
+        <h1>Hello, [[${name}]]!</h1>
+        <p>Here are upcoming events:</p>
+        <ul>
+            <li th:each="event : ${events}">
+                <strong th:text="${event.caption}"></strong> -
+                <span th:text="${event.dateTime}"></span> at
+                <span th:text="${event.address}"></span>
+            </li>
+        </ul>
+        <p>Don't miss them!</p>
+    </body>
+</html>
