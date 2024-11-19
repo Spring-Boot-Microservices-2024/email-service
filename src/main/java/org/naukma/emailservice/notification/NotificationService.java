@@ -16,9 +16,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 @EnableJms
 @Service
@@ -55,11 +57,12 @@ public class NotificationService {
         }
     }
 
-    @Scheduled(cron = "0 0 12 * * Sat") //saturday at 12:00
+    @Scheduled(cron = "0 * * * * *")
+//    @Scheduled(cron = "0 0 12 * * Sat") //saturday at 12:00
     private void sendEmails() throws MessagingException {
         List<User> users = userClient.getAllUsers();
         List<Event> events = eventClient.getEventsForNextWeek();
-        log.info("Sending information about the events on the next week: {}", events);
+        log.info("Sending information about the events on the next week");
         for (User user : users) {
             sendDigestEmail(user, events);
         }
@@ -69,9 +72,7 @@ public class NotificationService {
         Context context = new Context();
         context.setVariable("name", bookingEvent.getUser().getFirstname());
         context.setVariable("eventName", bookingEvent.getEvent().getCaption());
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy 'at' h:mm a", Locale.ENGLISH);
-        String formattedDate = bookingEvent.getEvent().getDateTime().format(formatter);
-        context.setVariable("eventDate", formattedDate);
+        context.setVariable("eventDate", formatDateTime(bookingEvent.getEvent().getDateTime()));
         context.setVariable("eventLocation", bookingEvent.getEvent().getAddress());
 
         emailSender.sendEmail(
@@ -100,7 +101,15 @@ public class NotificationService {
     private void sendDigestEmail(User user, List<Event> events) throws MessagingException {
         Context context = new Context();
         context.setVariable("name", user.getFirstname());
-        context.setVariable("events", events);
+        List<Map<String, String>> formattedEvents = events.stream()
+                .map(event -> Map.of(
+                        "caption", event.getCaption(),
+                        "dateTime", formatDateTime(event.getDateTime()),
+                        "address", event.getAddress()
+                )).toList();
+
+        context.setVariable("events", formattedEvents);
+
 
         emailSender.sendEmail(
                 EMAIL_FROM,
@@ -110,4 +119,10 @@ public class NotificationService {
                 context
         );
     }
+
+    private String formatDateTime(LocalDateTime dateTime) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy 'at' h:mm a", Locale.ENGLISH);
+        return dateTime.format(formatter);
+    }
+
 }
