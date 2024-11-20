@@ -57,14 +57,16 @@ public class NotificationService {
         }
     }
 
-    @Scheduled(cron = "0 * * * * *")
-//    @Scheduled(cron = "0 0 12 * * Sat") //saturday at 12:00
+//    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "0 0 12 * * Sat") //saturday at 12:00
     private void sendEmails() throws MessagingException {
         List<User> users = userClient.getAllUsers();
         List<Event> events = eventClient.getEventsForNextWeek();
         log.info("Sending information about the events on the next week");
-        for (User user : users) {
-            sendDigestEmail(user, events);
+        if (!events.isEmpty()) {
+            for (User user : users) {
+                sendDigestEmail(user, events);
+            }
         }
     }
 
